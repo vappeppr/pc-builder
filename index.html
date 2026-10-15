@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>СобериПК — Конструктор сборки компьютера</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            primary: '#6366f1',
+            secondary: '#8b5cf6',
+            accent: '#22d3ee',
+            dark: '#0f172a',
+            card: '#1e293b',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    body { font-family: 'Inter', sans-serif; }
+    .component-card { transition: all 0.2s ease; }
+    .component-card:hover { transform: translateY(-4px); }
+    .scrollbar-thin::-webkit-scrollbar { width: 6px; }
+    .scrollbar-thin::-webkit-scrollbar-track { background: #1e293b; }
+    .scrollbar-thin::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
+  </style>
+</head>
+<body class="bg-dark text-slate-100 min-h-screen">
+  <header class="bg-slate-900/80 backdrop-blur border-b border-slate-800 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 bg-gradient-to-br from-primary to-secondary rounded-xl flex items-center justify-center text-xl">🖥️</div>
+        <div>
+          <h1 class="text-xl font-bold">СобериПК</h1>
+          <p class="text-xs text-slate-400">Конструктор сборки компьютера</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-4">
+        <div class="text-right">
+          <div class="text-sm text-slate-400">Итого</div>
+          <div class="text-2xl font-bold text-accent" id="header-total">0 ₽</div>
+        </div>
+        <button onclick="openOrder()" class="px-4 py-2 bg-primary hover:bg-primary/90 rounded-lg text-sm transition">
+          <i class="fa-solid fa-shopping-cart mr-1"></i> Заказать
+        </button>
+        <button onclick="resetBuild()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-sm transition">
+          <i class="fa-solid fa-rotate-left mr-1"></i> Сбросить
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 py-6">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <aside class="lg:col-span-3">
+        <div class="bg-card rounded-2xl p-4 sticky top-24">
+          <h2 class="font-semibold mb-4 text-slate-300">Категории</h2>
+          <nav class="space-y-1" id="categories-nav"></nav>
+          <div class="mt-6 p-4 bg-slate-800/50 rounded-xl">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-sm text-slate-400">Собрано</span>
+              <span class="text-sm font-medium" id="progress-text">0 / 8</span>
+            </div>
+            <div class="w-full bg-slate-700 rounded-full h-2">
+              <div id="progress-bar" class="bg-gradient-to-r from-primary to-accent h-2 rounded-full transition-all" style="width: 0%"></div>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <section class="lg:col-span-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-3">
+          <h2 class="text-xl font-bold" id="current-category-title">Процессоры</h2>
+          <div class="flex gap-2">
+            <select id="brand-filter" onchange="renderComponents()" class="bg-slate-800 text-sm rounded-lg px-3 py-1.5 border border-slate-700">
+              <option value="">Все бренды</option>
+            </select>
+            <select id="sort-filter" onchange="renderComponents()" class="bg-slate-800 text-sm rounded-lg px-3 py-1.5 border border-slate-700">
+              <option value="price-asc">Цена ↑</option>
+              <option value="price-desc">Цена ↓</option>
+              <option value="name">Название</option>
+            </select>
+          </div>
+        </div>
+        <div class="text-sm text-slate-400 mb-3" id="items-count"></div>
+        <div id="components-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
+      </section>
+
+      <aside class="lg:col-span-3">
+        <div class="bg-card rounded-2xl p-4 sticky top-24">
+          <h2 class="font-semibold mb-4 flex items-center gap-2">
+            <i class="fa-solid fa-list-check text-accent"></i> Ваша сборка
+          </h2>
+          <div id="build-summary" class="space-y-3 text-sm mb-4 max-h-[400px] overflow-y-auto scrollbar-thin">
+            <p class="text-slate-500 text-center py-8">Выберите комплектующие</p>
+          </div>
+          <div id="compatibility-warnings" class="space-y-2 mb-4"></div>
+          <div class="border-t border-slate-700 pt-4">
+            <div class="flex justify-between items-center mb-4">
+              <span class="text-slate-400">Итоговая стоимость</span>
+              <span class="text-2xl font-bold text-accent" id="summary-total">0 ₽</span>
+            </div>
+            <button onclick="exportBuild()" class="w-full py-3 bg-gradient-to-r from-primary to-secondary hover:opacity-90 rounded-xl font-medium transition flex items-center justify-center gap-2 mb-2">
+              <i class="fa-solid fa-file-export"></i> Экспорт сборки
+            </button>
+            <button onclick="toggleCompare()" class="w-full py-2 bg-slate-800 hover:bg-slate-700 rounded-xl text-sm transition">
+              <i class="fa-solid fa-scale-balanced"></i> Сравнить (<span id="compare-count">0</span>)
+            </button>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <div id="export-modal" class="fixed inset-0 bg-black/70 hidden items-center justify-center z-50 p-4">
+    <div class="bg-card rounded-2xl p-6 max-w-lg w-full">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-bold">Сборка ПК</h3>
+        <button onclick="closeModal('export-modal')" class="text-slate-400 hover:text-white text-xl">&times;</button>
+      </div>
+      <pre id="export-content" class="bg-slate-900 p-4 rounded-xl text-xs overflow-auto max-h-80 whitespace-pre-wrap"></pre>
+      <button onclick="copyExport()" class="w-full mt-4 py-2 bg-primary rounded-xl text-sm">Копировать</button>
+    </div>
+  </div>
+
+  <div id="order-modal" class="fixed inset-0 bg-black/70 hidden items-center justify-center z-50 p-4">
+    <div class="bg-card rounded-2xl p-6 max-w-md w-full">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-bold">Оформление заказа</h3>
+        <button onclick="closeModal('order-modal')" class="text-slate-400 hover:text-white text-xl">&times;</button>
+      </div>
+      <div class="space-y-3">
+        <input id="order-name" placeholder="Имя" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm">
+        <input id="order-phone" placeholder="Телефон" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm">
+        <textarea id="order-address" placeholder="Адрес доставки" rows="2" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm"></textarea>
+        <div class="text-sm text-slate-400">Сумма: <span id="order-total" class="text-accent font-bold"></span></div>
+        <button onclick="submitOrder()" class="w-full py-3 bg-primary rounded-xl font-medium">Отправить заказ</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="compare-modal" class="fixed inset-0 bg-black/70 hidden items-center justify-center z-50 p-4">
+    <div class="bg-card rounded-2xl p-6 max-w-4xl w-full max-h-[80vh] overflow-auto">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-bold">Сравнение</h3>
+        <button onclick="closeModal('compare-modal')" class="text-slate-400 hover:text-white text-xl">&times;</button>
+      </div>
+      <div id="compare-content" class="overflow-x-auto"></div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
